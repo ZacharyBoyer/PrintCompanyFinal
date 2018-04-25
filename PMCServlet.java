@@ -343,4 +343,265 @@ public void init() throws ServletException {
         RequestDispatcher dispatcher = request.getRequestDispatcher("AddOrder.jsp");
         dispatcher.forward(request, response);
     }// </editor-fold>
+       // <editor-fold defaultstate="collapsed" desc="MarketingAgent methods. Click on the + sign on the left to edit the code."> 
+    protected void viewMarketingAgents(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        ArrayList<MarketingAgent> mAList = new ArrayList();
+
+        try {
+            mAList = mAServc.viewAllMarketingAgents(mADao);
+        } catch (SQLException ex) {
+            Logger.getLogger(PMCServlet.class.getName()).log(Level.SEVERE, null, ex);
+        } 
+        
+        request.setAttribute("mAList", mAList);
+        RequestDispatcher dispt = request.getRequestDispatcher("viewAgentList.jsp");
+        dispt.forward(request, response);
+    }
+
+    private void showEditMarketingAgent(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+       
+            int id = Integer.parseInt(request.getParameter("id"));
+            if(id!=1){
+                 try {
+            MarketingAgent mA = mAServc.viewMarketingAgent(id, mADao);
+            request.setAttribute("agent", mA);
+
+            RequestDispatcher dispatcher = request.getRequestDispatcher("EditAgent.jsp");
+            dispatcher.forward(request, response);
+                 } catch (SQLException sqlEx) {
+            sqlEx.printStackTrace();
+        }
+    }else if(id==1){
+        response.sendRedirect("agentList?res=" + 2);
+    }
+    }
+
+    private void updateMarketingAgent(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        int id = Integer.parseInt(request.getParameter("id"));
+        String FirstName = request.getParameter("FName");
+        String LastName = request.getParameter("LName");
+        String Email = request.getParameter("Email");
+        String UserName = request.getParameter("userName");
+        String Password = request.getParameter("password");
+        String phoneNumber = request.getParameter("phoneNum");
+
+        MarketingAgent mA = new MarketingAgent(id, FirstName, LastName, Email, UserName, Password, phoneNumber);
+
+        try {
+            mAServc.updateMarketingAgent(mA, mADao);
+            lServc.updateLogin(UserName, Password, id, lDao);
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        response.sendRedirect("agentList");
+    }
+
+    private void deleteMarketingAgent(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+          int res=0;
+        int id = Integer.parseInt(request.getParameter("id"));
+        if(id!=1){
+        res = mADao.deleteMarketingAgent(id);
+         lServc.deleteLogin(id, lDao);
+
+        }else if(id==1){
+            res =2;
+        }
+       
+        response.sendRedirect("agentList?res="+res + "&id="+id);
+    }
+
+    private void addMarketingAgent(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+
+        String FirstName = request.getParameter("FName");
+        String LastName = request.getParameter("LName");
+        String Email = request.getParameter("Email");
+        String UserName = request.getParameter("userName");
+        String Password = request.getParameter("password");
+        String phoneNumber = request.getParameter("phoneNum");
+
+        int res = mAServc.addMarketingAgent(FirstName, LastName, Email, UserName, Password, phoneNumber, mADao);
+        
+        try {
+            res += lServc.addLogin(UserName, Password, "agent", mAServc.viewMarketingAgent(UserName, mADao), lDao);
+        } catch (SQLException ex) {
+            Logger.getLogger(PMCServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+            
+        if (res > 0) {
+            RequestDispatcher dispatcher = request.getRequestDispatcher("agentList");
+            dispatcher.forward(request, response);
+}
+    }
+
+    private void newMarketingAgentForm(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        RequestDispatcher dispatcher = request.getRequestDispatcher("AddAgent.jsp");
+        dispatcher.forward(request, response);
+    }// </editor-fold>
+        // <editor-fold defaultstate="collapsed" desc="Location methods. Click on the + sign on the left to edit the code.">
+    /**
+     * Handles the Location <code> methods.
+     */
+    protected void viewLocations(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        ArrayList<Location> locList = new ArrayList();
+        try {
+            locList = locServc.viewAllLocations(locDao);
+        } catch (SQLException ex) {
+            Logger.getLogger(PMCServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        request.setAttribute("locList", locList);
+        RequestDispatcher dispt = request.getRequestDispatcher("viewLocations.jsp");
+        dispt.forward(request, response);
+
+    }
+
+    private void showEditLocation(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        try {
+            String Sid = request.getParameter("id");
+            int id = Integer.parseInt(Sid);
+            System.out.println(id);
+            Location loc = locServc.viewLocation(id, locDao);
+            request.setAttribute("location", loc);
+
+            RequestDispatcher dispatcher = request.getRequestDispatcher("EditLocation.jsp");
+            dispatcher.forward(request, response);
+
+        } catch (SQLException sqlEx) {
+            sqlEx.printStackTrace();
+        }
+    }
+
+    private void updateLocation(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+
+        String name = request.getParameter("name");
+        int id = Integer.parseInt(request.getParameter("id"));
+        int cap = Integer.parseInt(request.getParameter("Capacity"));
+
+        Location loc = new Location(id, name, cap);
+
+        try {
+            locServc.updateLocation(loc, locDao);
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        response.sendRedirect("locList");
+    }
+
+    private void deleteLocation(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        int res = 0;
+        int id = Integer.parseInt(request.getParameter("id"));
+
+         res = locDao.deleteLocation(id);
+
+        response.sendRedirect("locList?res=" + res);
+    }
+
+    private void addLocation(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+
+        String name = request.getParameter("name");
+        int cap = Integer.parseInt(request.getParameter("Capacity"));
+
+        int res = locServc.addLocation(name, cap, locDao);
+
+        if (res > 0) {
+            RequestDispatcher dispatcher = request.getRequestDispatcher("locList");
+            dispatcher.forward(request, response);
+        } else {
+            response.sendRedirect("viewLocations.jsp");
+        }
+
+    }
+
+    private void newLocationForm(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        RequestDispatcher dispatcher = request.getRequestDispatcher("AddLocation.jsp");
+        dispatcher.forward(request, response);
+    }// </editor-fold>
+   private void loginCheck(HttpServletRequest request, HttpServletResponse response) {
+        ArrayList<String> res;
+        RequestDispatcher dispatcher = null;
+        try {
+            String login = request.getParameter("login");
+            String pass = request.getParameter("password");            
+          
+            res = lDao.checkLogin(login, pass);
+          
+          if(res.size()==3){
+              
+          if(res.get(0).equals("1")&&res.get(1).equals("admin")){
+              uT.setId(Integer.parseInt(res.get(2)));
+              uT.setType(res.get(1));
+              request.setAttribute("user", uT);
+              dispatcher = request.getRequestDispatcher("adminPage.jsp");
+          }
+          else if(res.get(0).equals("1")&&res.get(1).equals("agent")){
+               uT.setId(Integer.parseInt(res.get(2)));
+              uT.setType(res.get(1));
+              request.setAttribute("user", uT);
+              dispatcher = request.getRequestDispatcher("agentPage.jsp");
+          }
+          }
+          else if(res.get(0).equals("0")){
+              request.setAttribute("Message", "Not a valid Login");
+              dispatcher = request.getRequestDispatcher("login.jsp");
+          }
+          
+              dispatcher.forward(request, response);
+          
+        } catch (ServletException ex) {
+            Logger.getLogger(PMCServlet.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(PMCServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    public void showLogin(HttpServletRequest request, HttpServletResponse response){
+        RequestDispatcher dispatcher = null;
+        try {
+            dispatcher = request.getRequestDispatcher("login.jsp");
+              dispatcher.forward(request, response);
+        } catch (IOException ex) {
+            Logger.getLogger(PMCServlet.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ServletException ex) {
+            Logger.getLogger(PMCServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public void showAdminPage(HttpServletRequest request, HttpServletResponse response){
+        try {
+           RequestDispatcher dispatcher = request.getRequestDispatcher("adminPage.jsp");
+              dispatcher.forward(request, response);
+        } catch (IOException ex) {
+            Logger.getLogger(PMCServlet.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ServletException ex) {
+            Logger.getLogger(PMCServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    public void showAgentPage(HttpServletRequest request, HttpServletResponse response){
+        try {
+            response.sendRedirect("agentPage.jsp");
+        } catch (IOException ex) {
+            Logger.getLogger(PMCServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    public void logout(HttpServletRequest request, HttpServletResponse response){
+        uT= new userType();
+        RequestDispatcher dispatcher = null;
+        try {
+             dispatcher = request.getRequestDispatcher("login.jsp");
+             dispatcher.forward(request, response);
+        } catch (IOException ex) {
+            Logger.getLogger(PMCServlet.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ServletException ex) {
+          Logger.getLogger(PMCServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 }
