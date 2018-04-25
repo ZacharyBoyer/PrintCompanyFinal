@@ -6,6 +6,8 @@
 import Model.*;
 import PrintCompanyService.*;
 import dao.*;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
@@ -213,6 +215,124 @@ public void init() throws ServletException {
             throws IOException, ServletException {
         request.setAttribute("userId", uT.getId());
         RequestDispatcher dispatcher = request.getRequestDispatcher("AddClient.jsp");
+        dispatcher.forward(request, response);
+    }// </editor-fold>
+       // <editor-fold defaultstate="collapsed" desc="Order methods. Click on the + sign on the left to edit the code."> 
+    protected void viewOrders(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        ArrayList<Order> oList = new ArrayList();
+        oList = oServc.viewOrders(oDao);
+        String msgVisibility="";
+        
+        if(uT.getType().equals("admin")){
+            msgVisibility= "hidden";
+        }
+        else{
+            msgVisibility="";
+        }
+        request.setAttribute("messageVis", msgVisibility);
+        request.setAttribute("oList", oList);
+        RequestDispatcher dispt = request.getRequestDispatcher("viewOrderList.jsp");
+        dispt.forward(request, response);
+    }
+
+    private void showEditOrder(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            
+            Order oObj = oServc.showOrder(id, oDao);
+            request.setAttribute("order", oObj);
+            
+            ArrayList<MarketingAgent> mAs = mAServc.viewAllMarketingAgents(mADao);
+            request.setAttribute("agents",mAs);
+            
+            RequestDispatcher dispatcher = request.getRequestDispatcher("EditOrder.jsp");
+            dispatcher.forward(request, response);
+
+        } catch (SQLException sqlEx) {
+            sqlEx.printStackTrace();
+        }
+    }
+
+    private void updateOrder(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+
+        if (!request.getParameter("FlyerImg").equals("")) {
+            File theFile = new File(request.getParameter("FlyerImg"));
+            FileInputStream input = new FileInputStream(theFile);
+
+            try {
+                Order oObj = new Order(Integer.parseInt(request.getParameter("id")), Integer.parseInt(request.getParameter("AgentId")), Integer.parseInt(request.getParameter("clientId")), Integer.parseInt(request.getParameter("flyerQty")),
+                        Integer.parseInt(request.getParameter("personalCopy")), request.getParameter("flyerLayout"), request.getParameter("paymentInformation"),
+                        request.getParameter("invoiceNumber"), request.getParameter("comments"), Boolean.parseBoolean(request.getParameter("isFlyerArtApproved")), Boolean.parseBoolean(request.getParameter("isPaymentRecived")), input);
+
+                oServc.updateOrder(oObj, oDao);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        } else {
+            try {
+                Order oObj = new Order(Integer.parseInt(request.getParameter("id")), Integer.parseInt(request.getParameter("AgentId")), Integer.parseInt(request.getParameter("clientId")), Integer.parseInt(request.getParameter("flyerQty")),
+                        Integer.parseInt(request.getParameter("personalCopy")), request.getParameter("flyerLayout"), request.getParameter("paymentInformation"),
+                        request.getParameter("invoiceNumber"), request.getParameter("comments"), Boolean.parseBoolean(request.getParameter("isFlyerArtApproved")), Boolean.parseBoolean(request.getParameter("isPaymentRecived")));
+
+                oServc.updateOrderWoImg(oObj, oDao);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+        response.sendRedirect("orderList");
+    }
+
+    private void deleteOrder(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+         int res =0;
+        int id = Integer.parseInt(request.getParameter("id"));
+
+        try {
+          res = oDao.deleteOrder(id);
+        } catch (SQLException ex) {
+            Logger.getLogger(PMCServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+         response.sendRedirect("orderList?res=" + res);
+    }
+
+    private void addOrder(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+
+        FileInputStream input = null;
+        File theFile = new File(request.getParameter("FlyerImg"));
+        input = new FileInputStream(theFile);
+ 
+       final int res = oServc.addOrder(Integer.parseInt(request.getParameter("AgentId")), Integer.parseInt(request.getParameter("clientId")), Integer.parseInt(request.getParameter("flyerQty")),
+                Integer.parseInt(request.getParameter("personalCopy")), request.getParameter("flyerLayout"), request.getParameter("paymentInformation"),
+                request.getParameter("invoiceNumber"), request.getParameter("comments"), Boolean.parseBoolean(request.getParameter("isFlyerArtApproved")),
+                Boolean.parseBoolean(request.getParameter("isPaymentRecived")), input, oDao);
+        int id = oDao.viewLastId();
+        
+        oDao.addLocXorder(id, request.getParameterValues("loc"));
+        
+        if (res == 0) {
+            RequestDispatcher dispatcher = request.getRequestDispatcher("orderList");
+            dispatcher.forward(request, response);
+        } else {
+            response.sendRedirect("orderList");
+        }
+    }
+
+    private void newOrderForm(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        ArrayList<Location> locs;
+        locs = locServc.viewLocationNames(locDao);
+        ArrayList<Client> names;
+        names = clientServc.viewClientNames(clientDao);
+        request.setAttribute("userId", uT.getId());
+        
+        request.setAttribute("LocNames", locs);
+        request.setAttribute("clientNames", names);
+        
+        RequestDispatcher dispatcher = request.getRequestDispatcher("AddOrder.jsp");
         dispatcher.forward(request, response);
     }// </editor-fold>
 }
