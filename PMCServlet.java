@@ -102,34 +102,34 @@ public void init() throws ServletException {
     public String getServletInfo() {
         return "Short description";
     }// </editor-fold>
- // <editor-fold defaultstate="collapsed" desc="Location methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the Location <code> methods.
-     */
-    protected void viewLocations(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        ArrayList<Location> locList = new ArrayList();
-        try {
-            locList = locServc.viewAllLocations(locDao);
-        } catch (SQLException ex) {
-            Logger.getLogger(PMCServlet.class.getName()).log(Level.SEVERE, null, ex);
+   // <editor-fold defaultstate="collapsed" desc="Client methods. Click on the + sign on the left to edit the code."> 
+    protected void viewClients(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        ArrayList<Client> clientList = new ArrayList();
+        String msgVisibility="";
+        
+        if(uT.getType().equals("admin")){
+            msgVisibility= "";
         }
+        else{
+            msgVisibility="hidden";
+        }
+        request.setAttribute("messageVis", msgVisibility);
+        clientList = clientServc.viewClients(clientDao);
 
-        request.setAttribute("locList", locList);
-        RequestDispatcher dispt = request.getRequestDispatcher("viewLocations.jsp");
+        request.setAttribute("clientList", clientList);
+        RequestDispatcher dispt = request.getRequestDispatcher("viewClientList.jsp");
         dispt.forward(request, response);
-
     }
 
-    private void showEditLocation(HttpServletRequest request, HttpServletResponse response)
+    private void showEditClient(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
         try {
-            String Sid = request.getParameter("id");
-            int id = Integer.parseInt(Sid);
+            int id = Integer.parseInt(request.getParameter("id"));
             System.out.println(id);
-            Location loc = locServc.viewLocation(id, locDao);
-            request.setAttribute("location", loc);
+            Client client = clientServc.showClient(id, clientDao);
+            request.setAttribute("client", client);
 
-            RequestDispatcher dispatcher = request.getRequestDispatcher("EditLocation.jsp");
+            RequestDispatcher dispatcher = request.getRequestDispatcher("EditClient.jsp");
             dispatcher.forward(request, response);
 
         } catch (SQLException sqlEx) {
@@ -137,53 +137,82 @@ public void init() throws ServletException {
         }
     }
 
-    private void updateLocation(HttpServletRequest request, HttpServletResponse response)
+    private void updateClient(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
-
-        String name = request.getParameter("name");
         int id = Integer.parseInt(request.getParameter("id"));
-        int cap = Integer.parseInt(request.getParameter("Capacity"));
+        int AgentId = Integer.parseInt(request.getParameter("AgentId"));
+        String FirstName = request.getParameter("FName");
+        String LastName = request.getParameter("LName");
+        String StreetNumber = request.getParameter("SNum");
+        String StreetName = request.getParameter("SName");
+        String City = request.getParameter("City");
+        String Province = request.getParameter("Province");
+        String PostalCode = request.getParameter("Postal");
+        String TelOffice = request.getParameter("ONum");
+        String TelCell = request.getParameter("CNum");
+        String Email = request.getParameter("Email");
+        String Company = request.getParameter("CName");
+        String CompanyType = request.getParameter("CType");
 
-        Location loc = new Location(id, name, cap);
+        Client client = new Client(id, AgentId, FirstName, LastName, StreetNumber, StreetName, City, Province, PostalCode, TelOffice, TelCell, Email, Company, CompanyType);
 
         try {
-            locServc.updateLocation(loc, locDao);
+            clientServc.updateClient(client, clientDao);
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
-        response.sendRedirect("locList");
+        response.sendRedirect("clientList");
     }
 
-    private void deleteLocation(HttpServletRequest request, HttpServletResponse response)
+    private void deleteClient(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
-        int res = 0;
+        int res =0;
         int id = Integer.parseInt(request.getParameter("id"));
-
-         res = locDao.deleteLocation(id);
-
-        response.sendRedirect("locList?res=" + res);
+        if(!(Integer.parseInt(request.getParameter("aId")) == uT.getId()) && !uT.getType().equals("admin")){
+            res=0;
+        } else if((Integer.parseInt(request.getParameter("aId")) == uT.getId()) || uT.getType().equals("admin")) {
+            try {
+                res = clientDao.deleteClient(id);
+            } catch (SQLException ex) {
+                Logger.getLogger(PMCServlet.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        response.sendRedirect("clientList?res=" + res);
     }
 
-    private void addLocation(HttpServletRequest request, HttpServletResponse response)
+    private void addClient(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
 
-        String name = request.getParameter("name");
-        int cap = Integer.parseInt(request.getParameter("Capacity"));
+        int AgentId = Integer.parseInt(request.getParameter("AgentId"));
+        String FirstName = request.getParameter("FName");
+        String LastName = request.getParameter("LName");
+        String StreetNumber = request.getParameter("SNum");
+        String StreetName = request.getParameter("SName");
+        String City = request.getParameter("City");
+        String Province = request.getParameter("Province");
+        String PostalCode = request.getParameter("Postal");
+        String TelOffice = request.getParameter("ONum");
+        String TelCell = request.getParameter("CNum");
+        String Email = request.getParameter("Email");
+        String Company = request.getParameter("CName");
+        String CompanyType = request.getParameter("CType");
 
-        int res = locServc.addLocation(name, cap, locDao);
+        int res = clientServc.addClient(AgentId, FirstName, LastName, StreetNumber, StreetName, City, Province, PostalCode, TelOffice, TelCell, Email, Company, CompanyType, clientDao);
 
         if (res > 0) {
-            RequestDispatcher dispatcher = request.getRequestDispatcher("locList");
+            RequestDispatcher dispatcher = request.getRequestDispatcher("clientList");
             dispatcher.forward(request, response);
         } else {
-            response.sendRedirect("viewLocations.jsp");
+            response.sendRedirect("errorjsp.jsp");
         }
 
     }
 
-    private void newLocationForm(HttpServletRequest request, HttpServletResponse response)
+    private void newClientForm(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
-        RequestDispatcher dispatcher = request.getRequestDispatcher("AddLocation.jsp");
+        request.setAttribute("userId", uT.getId());
+        RequestDispatcher dispatcher = request.getRequestDispatcher("AddClient.jsp");
         dispatcher.forward(request, response);
     }// </editor-fold>
 }
