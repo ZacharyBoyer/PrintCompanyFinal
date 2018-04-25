@@ -26,6 +26,10 @@ import javax.servlet.http.HttpServletResponse;
 public class PMCServlet extends HttpServlet {
      locationService locServc;
     locationDao locDao;
+    clientService clientServc;
+    ClientDao clientDao;
+    orderDao oDao;
+    orderService oServc;
     String jdbcUserName;
     String jdbcPassword;
     String jdbcURL;
@@ -38,6 +42,10 @@ public void init() throws ServletException {
         jdbcPassword = getServletContext().getInitParameter("jdbcPassword");
         locDao = new locationDao(jdbcURL, jdbcUserName, jdbcPassword);
         locServc = new locationService();
+        clientDao = new ClientDao(jdbcURL, jdbcUserName, jdbcPassword);
+        clientServc = new clientService();
+        oDao = new orderDao(jdbcURL, jdbcUserName, jdbcPassword);
+        oServc = new orderService();
     }
     
     /**
