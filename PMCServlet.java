@@ -24,17 +24,23 @@ import javax.servlet.http.HttpServletResponse;
  * @author Zach
  */
 public class PMCServlet extends HttpServlet {
-     locationService locServc;
+   locationService locServc;
     locationDao locDao;
     clientService clientServc;
     ClientDao clientDao;
+    MarketingAgentDao mADao;
+    MarketingAgentService mAServc;
     orderDao oDao;
     orderService oServc;
+    loginDao lDao;
+    loginService lServc;
     String jdbcUserName;
     String jdbcPassword;
     String jdbcURL;
     userType uT;
-public void init() throws ServletException {
+    
+    @Override
+    public void init() throws ServletException {
         jdbcURL = getServletContext().getInitParameter("jdbcURL");
                // "jdbc:mysql://localhost:3306/printmarketing";
         jdbcUserName = getServletContext().getInitParameter("jdbcUserName");
@@ -44,8 +50,13 @@ public void init() throws ServletException {
         locServc = new locationService();
         clientDao = new ClientDao(jdbcURL, jdbcUserName, jdbcPassword);
         clientServc = new clientService();
+        mADao = new MarketingAgentDao(jdbcURL, jdbcUserName, jdbcPassword);
+        mAServc = new MarketingAgentService();
         oDao = new orderDao(jdbcURL, jdbcUserName, jdbcPassword);
         oServc = new orderService();
+        lDao = new loginDao(jdbcURL, jdbcUserName, jdbcPassword);
+        lServc = new loginService();
+        uT = new userType();
     }
     
     /**
@@ -112,7 +123,7 @@ public void init() throws ServletException {
     public String getServletInfo() {
         return "Short description";
     }// </editor-fold>
-   // <editor-fold defaultstate="collapsed" desc="Client methods. Click on the + sign on the left to edit the code."> 
+    // <editor-fold defaultstate="collapsed" desc="Client methods. Click on the + sign on the left to edit the code."> 
     protected void viewClients(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         ArrayList<Client> clientList = new ArrayList();
         String msgVisibility="";
@@ -225,7 +236,7 @@ public void init() throws ServletException {
         RequestDispatcher dispatcher = request.getRequestDispatcher("AddClient.jsp");
         dispatcher.forward(request, response);
     }// </editor-fold>
-       // <editor-fold defaultstate="collapsed" desc="Order methods. Click on the + sign on the left to edit the code."> 
+    // <editor-fold defaultstate="collapsed" desc="Order methods. Click on the + sign on the left to edit the code."> 
     protected void viewOrders(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         ArrayList<Order> oList = new ArrayList();
         oList = oServc.viewOrders(oDao);
@@ -343,7 +354,7 @@ public void init() throws ServletException {
         RequestDispatcher dispatcher = request.getRequestDispatcher("AddOrder.jsp");
         dispatcher.forward(request, response);
     }// </editor-fold>
-       // <editor-fold defaultstate="collapsed" desc="MarketingAgent methods. Click on the + sign on the left to edit the code."> 
+    // <editor-fold defaultstate="collapsed" desc="MarketingAgent methods. Click on the + sign on the left to edit the code."> 
     protected void viewMarketingAgents(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         ArrayList<MarketingAgent> mAList = new ArrayList();
 
@@ -442,7 +453,7 @@ public void init() throws ServletException {
         RequestDispatcher dispatcher = request.getRequestDispatcher("AddAgent.jsp");
         dispatcher.forward(request, response);
     }// </editor-fold>
-        // <editor-fold defaultstate="collapsed" desc="Location methods. Click on the + sign on the left to edit the code.">
+    // <editor-fold defaultstate="collapsed" desc="Location methods. Click on the + sign on the left to edit the code.">
     /**
      * Handles the Location <code> methods.
      */
@@ -526,7 +537,7 @@ public void init() throws ServletException {
         RequestDispatcher dispatcher = request.getRequestDispatcher("AddLocation.jsp");
         dispatcher.forward(request, response);
     }// </editor-fold>
-   private void loginCheck(HttpServletRequest request, HttpServletResponse response) {
+    private void loginCheck(HttpServletRequest request, HttpServletResponse response) {
         ArrayList<String> res;
         RequestDispatcher dispatcher = null;
         try {
@@ -574,7 +585,33 @@ public void init() throws ServletException {
             Logger.getLogger(PMCServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+    private void agentTransfer(HttpServletRequest request, HttpServletResponse response) {
+        int res =0;
+        try {
+            res = mADao.agentTransfer(Integer.parseInt(request.getParameter("id")));
+            if(res==1){
+                res=mADao.deleteMarketingAgent(Integer.parseInt(request.getParameter("id")));
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(PMCServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if(res>0){
+            try {
+                
+                response.sendRedirect("agentList");
+            } catch (IOException ex) {
+                Logger.getLogger(PMCServlet.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        else{
+            try {
+                response.sendRedirect("agentList");
+            } catch (IOException ex) {
+                Logger.getLogger(PMCServlet.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
     public void showAdminPage(HttpServletRequest request, HttpServletResponse response){
         try {
            RequestDispatcher dispatcher = request.getRequestDispatcher("adminPage.jsp");
