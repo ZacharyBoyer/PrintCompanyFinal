@@ -29,7 +29,7 @@
                     </tr>
                       <tr>
                         <th>Agent Id</th>
-                        <td><select id="clientId" name="clientId">
+                        <td><select id="AgentId" name="AgentId">
                        <c:forEach var="agents" items="${agents}">
                            <option value="<c:out value='${agents.id}'/>"><c:out value="ID ${agents. id} Name: ${agents.firstName} ${agents.lastName} "/></option>
                         </c:forEach>
@@ -38,7 +38,11 @@
                     </tr>
                       <tr>
                         <th>Client Id</th>
-                        <td><input class="inputField ripple" type="text" name="clientId" id="clientId" required value="${order.clientId}"></td>
+                        <td><select id="clientId" name="clientId">
+                       <c:forEach var="clients" items="${clients}">
+                           <option value="<c:out value='${clients.id}'/>"><c:out value="ID ${clients. id} Name: ${clients.firstName} ${clients.lastName} "/></option>
+                        </c:forEach>
+                        </select>
                     </tr>
                     <tr>
                         <th>Flyer Quantity</th>
@@ -72,11 +76,36 @@
                     </tr>
                       <tr>
                         <th>Flyer Art Approval</th>
-                        <td><input class="inputField ripple" type="checkbox" name="isFlyerArtApproved" id="isFlyerArtApproved" value="${order.flyerArtApprovl}"></td>
+                        <td><input class="inputField ripple" type="checkbox" name="isFlyerArtApproved" id="isFlyerArtApproved"  
+                                   <c:if test="${order.flyerArtApprovl eq true}">
+                                   <c:out value=" checked "/>
+                               </c:if>></td>
                     </tr>
-                      <tr>
+                      <tr> 
                         <th>Payment Recived </th>
-                        <td><input class="inputField ripple" type="checkbox" name="isPaymentRecived" id="isPaymentRecived" value="${order.paymentRecvd}"></td>
+                        <td><input class="inputField ripple" type="checkbox" name="isPaymentRecived" id="isPaymentRecived"
+                                   <c:if test="${order.paymentRecvd eq true}">
+                                   <c:out value=" checked "/>
+                               </c:if>></td>
+                    </tr>
+                    <tr>
+                        <th>Location</th>
+                        <td>
+                            <select id="loc" name="loc" multiple>
+                       <c:forEach var="location" items="${LocNames}">
+                           <option value="<c:out value="${location.id}"/>"
+                               <c:forEach var="selected" items="${selectedLocs}">
+                               <c:if test="${location.id eq selected}">
+                                   <c:out value=" selected "/>>
+                               </c:if>
+                               </c:forEach>
+                               <c:out value="${location.locationName}"/></option>
+                           </c:forEach>
+                        </select>
+                            </br>
+                            To Select Multiple Locations </br>
+                             Use CTRL or CMD + button click
+                        </td>
                     </tr>
                     <td colspan="2"><input class="button ripple" style="float:right" type="submit" name="submit" value="Update"></td>
                 </table>
